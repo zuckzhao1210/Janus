@@ -62,8 +62,10 @@ GlobalData::GlobalData() {
   }
 
   const auto& run_mode_conf = config_.run_mode_conf();
-  run_mode_ = run_mode_conf.run_mode();
-  clock_mode_ = run_mode_conf.clock_mode();
+  // default run mode is reality mode
+  run_mode_ = RunMode::MODE_REALITY;
+  // default clock mode is cyber mode
+  clock_mode_ = ClockMode::MODE_CYBER;
 }
 
 GlobalData::~GlobalData() {}
@@ -124,6 +126,7 @@ void GlobalData::InitHostInfo() {
     }
   }
 
+  // try to find first non-loopback ipv4 addr.
   ifaddrs* ifaddr = nullptr;
   if (getifaddrs(&ifaddr) != 0) {
     AERROR << "getifaddrs failed, we will use 127.0.0.1 as host ip.";
@@ -154,6 +157,8 @@ void GlobalData::InitHostInfo() {
 }
 
 bool GlobalData::InitConfig() {
+  // default cyber conf file path is "/apollo/cyber/conf/cyber.pb.conf" or "CYBER_CONF_PATH/conf/cyber.pb.conf"
+  // set env var CYBER_CONF_PATH if it is not set. 
   auto config_path = GetAbsolutePath(WorkRoot(), "conf/cyber.pb.conf");
   if (!GetProtoFromFile(config_path, &config_)) {
     AERROR << "read cyber default conf failed!";

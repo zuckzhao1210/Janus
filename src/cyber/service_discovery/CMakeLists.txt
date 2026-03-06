@@ -24,6 +24,7 @@ add_library(cyber_service_discovery SHARED
 target_include_directories(cyber_service_discovery
 PUBLIC
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/thirdparty/include
 )
 
 target_link_libraries(cyber_service_discovery
@@ -48,14 +49,15 @@ add_library(cyber_service_discovery_role SHARED
     role/role.cc
 )
 
-target_include_directories(cyber_service_discovery_role
+target_include_directories(cyber_service_discovery
 PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/thirdparty/include
 )
 
 target_link_libraries(cyber_service_discovery_role
 PUBLIC
     cyber_binary
     cyber_common
-    role_attributes_cc_proto
+    cyber_proto
 )

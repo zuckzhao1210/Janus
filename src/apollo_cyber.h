@@ -14,6 +14,18 @@
 using apollo::cyber::proto::RoleAttributes;
 using namespace apollo::cyber;
 
+namespace apollo {
+namespace cyber {
+std::unique_ptr<Node> CreateNode(const std::string& node_name,
+                                 const std::string& name_space = "");
+
+std::unique_ptr<Node> CreateNode(const std::string& node_name,
+                                 const std::string& name_space) {
+  return std::unique_ptr<Node>(new Node(node_name, name_space));
+}
+}  // namespace cyber
+}  // namespace apollo
+
 namespace janus {
 
 class ApolloCyber {
@@ -25,25 +37,18 @@ class ApolloCyber {
     return instance_;
   }
 
-  template <typename MessageT>
-  auto CreateWriter(const std::string& channel_name)
-      -> std::shared_ptr<Writer<MessageT>>;
+  Node* GetNode() { return node_ptr_.get(); }
 
  private:
   ApolloCyber(const std::string& node_name) : node_name_(node_name) {
-    node_ = apollo::cyber::CreateNode(node_name_);
+    node_ptr_ = apollo::cyber::CreateNode(node_name_);
   };
 
  private:
   std::unique_ptr<NodeChannelImpl> node_channel_impl_ = nullptr;
   std::string node_name_;
-  std::unique_ptr<Node> node_ = nullptr;
+  std::unique_ptr<Node> node_ptr_ = nullptr;
 };
 
-template <typename MessageT>
-auto ApolloCyber::CreateWriter(const std::string& channel_name)
-    -> std::shared_ptr<Writer<MessageT>> {
-  return node_->CreateWriter<MessageT>(channel_name);
-}
 }  // namespace janus
 #endif  // APOLLO_CYBER_H

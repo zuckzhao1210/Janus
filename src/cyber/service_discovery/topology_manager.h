@@ -42,8 +42,8 @@ using NodeManagerPtr = std::shared_ptr<NodeManager>;
 class ChannelManager;
 using ChannelManagerPtr = std::shared_ptr<ChannelManager>;
 
-class ServiceManager;
-using ServiceManagerPtr = std::shared_ptr<ServiceManager>;
+// class ServiceManager;
+// using ServiceManagerPtr = std::shared_ptr<ServiceManager>;
 
 /**
  * @class TopologyManager
@@ -111,7 +111,7 @@ class TopologyManager {
 
   bool InitNodeManager();
   bool InitChannelManager();
-  bool InitServiceManager();
+  // bool InitServiceManager();
 
   bool CreateParticipant();
   void OnParticipantChange(const PartInfo& info);

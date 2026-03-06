@@ -28,7 +28,7 @@ TopologyManager::TopologyManager()
     : init_(false),
       node_manager_(nullptr),
       channel_manager_(nullptr),
-      service_manager_(nullptr),
+      // service_manager_(nullptr),
       participant_(nullptr),
       participant_listener_(nullptr) {
   Init();
@@ -45,7 +45,7 @@ void TopologyManager::Shutdown() {
 
   node_manager_->Shutdown();
   channel_manager_->Shutdown();
-  service_manager_->Shutdown();
+  // service_manager_->Shutdown();
   participant_->Shutdown();
 
   delete participant_listener_;
@@ -71,7 +71,7 @@ bool TopologyManager::Init() {
 
   node_manager_ = std::make_shared<NodeManager>();
   channel_manager_ = std::make_shared<ChannelManager>();
-  service_manager_ = std::make_shared<ServiceManager>();
+  // service_manager_ = std::make_shared<ServiceManager>();
 
   CreateParticipant();
 
@@ -84,7 +84,7 @@ bool TopologyManager::Init() {
     participant_listener_ = nullptr;
     node_manager_ = nullptr;
     channel_manager_ = nullptr;
-    service_manager_ = nullptr;
+    // service_manager_ = nullptr;
     init_.store(false);
     return false;
   }
@@ -100,9 +100,9 @@ bool TopologyManager::InitChannelManager() {
   return channel_manager_->StartDiscovery(participant_->fastrtps_participant());
 }
 
-bool TopologyManager::InitServiceManager() {
-  return service_manager_->StartDiscovery(participant_->fastrtps_participant());
-}
+// bool TopologyManager::InitServiceManager() {
+//   return service_manager_->StartDiscovery(participant_->fastrtps_participant());
+// }
 
 bool TopologyManager::CreateParticipant() {
   std::string participant_name =
@@ -130,7 +130,7 @@ void TopologyManager::OnParticipantChange(const PartInfo& info) {
     int process_id = msg.role_attr().process_id();
     node_manager_->OnTopoModuleLeave(host_name, process_id);
     channel_manager_->OnTopoModuleLeave(host_name, process_id);
-    service_manager_->OnTopoModuleLeave(host_name, process_id);
+    // service_manager_->OnTopoModuleLeave(host_name, process_id);
   }
   change_signal_(msg);
 }                                                                           
