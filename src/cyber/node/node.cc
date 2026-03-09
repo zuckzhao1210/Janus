@@ -33,17 +33,6 @@ Node::~Node() {}
 
 const std::string& Node::Name() const { return node_name_; }
 
-void Node::Observe() {
-  for (auto& reader : readers_) {
-    reader.second->Observe();
-  }
-}
-
-void Node::ClearData() {
-  for (auto& reader : readers_) {
-    reader.second->ClearData();
-  }
-}
 
 bool Node::DeleteReader(const std::string& channel_name) {
   std::lock_guard<std::mutex> lg(readers_mutex_);

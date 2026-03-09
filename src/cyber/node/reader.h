@@ -67,7 +67,6 @@ const uint32_t DEFAULT_PENDING_QUEUE_SIZE = 1;
 template <typename MessageT>
 class Reader : public ReaderBase {
  public:
-  using BlockerPtr = std::unique_ptr<blocker::Blocker<MessageT>>;
   using ReceiverPtr = std::shared_ptr<transport::Receiver<MessageT>>;
   using ChangeConnection =
       typename service_discovery::Manager::ChangeConnection;
@@ -102,32 +101,6 @@ class Reader : public ReaderBase {
   void Shutdown() override;
 
   /**
-   * @brief Get All data that `Blocker` stores
-   */
-  void Observe() override;
-
-  /**
-   * @brief Clear `Blocker`'s data
-   */
-  void ClearData() override;
-
-  /**
-   * @brief Query whether we have received data since last clear
-   *
-   * @return true if the reader has received data
-   * @return false if the reader has not received data
-   */
-  bool HasReceived() const override;
-
-  /**
-   * @brief Query whether the Reader has data to be handled
-   *
-   * @return true if blocker is empty
-   * @return false if blocker has data
-   */
-  bool Empty() const override;
-
-  /**
    * @brief Get time interval of since last receive message
    *
    * @return double seconds delay
@@ -140,55 +113,6 @@ class Reader : public ReaderBase {
    * @return uint32_t the value of pending queue size
    */
   uint32_t PendingQueueSize() const override;
-
-  /**
-   * @brief Push `msg` to Blocker's `PublishQueue`
-   *
-   * @param msg message ptr to be pushed
-   */
-  virtual void Enqueue(const std::shared_ptr<MessageT>& msg);
-
-  /**
-   * @brief Set Blocker's `PublishQueue`'s capacity to `depth`
-   *
-   * @param depth the value you  want to set
-   */
-  virtual void SetHistoryDepth(const uint32_t& depth);
-
-  /**
-   * @brief Get Blocker's `PublishQueue`'s capacity
-   *
-   * @return uint32_t depth of the history
-   */
-  virtual uint32_t GetHistoryDepth() const;
-
-  /**
-   * @brief Get the latest message we `Observe`
-   *
-   * @return std::shared_ptr<MessageT> the latest message
-   */
-  virtual std::shared_ptr<MessageT> GetLatestObserved() const;
-
-  /**
-   * @brief Get the oldest message we `Observe`
-   *
-   * @return std::shared_ptr<MessageT> the oldest message
-   */
-  virtual std::shared_ptr<MessageT> GetOldestObserved() const;
-
-  /**
-   * @brief Get the begin iterator of `ObserveQueue`, used to traverse
-   *
-   * @return Iterator begin iterator
-   */
-  virtual Iterator Begin() const { return blocker_->ObservedBegin(); }
-
-  /**
-   * @brief Get the end iterator of `ObserveQueue`, used to traverse
-   *
-   * @return Iterator begin iterator
-   */
-  virtual Iterator End() const { return blocker_->ObservedEnd(); }
 
   /**
    * @brief Is there is at least one writer publish the channel that we
@@ -220,8 +144,6 @@ class Reader : public ReaderBase {
   ReceiverPtr receiver_ = nullptr;
   std::string croutine_name_;
 
-  BlockerPtr blocker_ = nullptr;
-
   ChangeConnection change_conn_;
   service_discovery::ChannelManagerPtr channel_manager_ = nullptr;
 };
@@ -233,25 +155,11 @@ Reader<MessageT>::Reader(const proto::RoleAttributes& role_attr,
     : ReaderBase(role_attr),
       pending_queue_size_(pending_queue_size),
       reader_func_(reader_func) {
-  blocker_.reset(new blocker::Blocker<MessageT>(blocker::BlockerAttr(
-      role_attr.qos_profile().depth(), role_attr.channel_name())));
 }
 
 template <typename MessageT>
 Reader<MessageT>::~Reader() {
   Shutdown();
-}
-
-template <typename MessageT>
-void Reader<MessageT>::Enqueue(const std::shared_ptr<MessageT>& msg) {
-  second_to_lastest_recv_time_sec_ = latest_recv_time_sec_;
-  latest_recv_time_sec_ = Time::Now().ToSecond();
-  blocker_->Publish(msg);
-}
-
-template <typename MessageT>
-void Reader<MessageT>::Observe() {
-  blocker_->Observe();
 }
 
 template <typename MessageT>
@@ -262,31 +170,22 @@ bool Reader<MessageT>::Init() {
   std::function<void(const std::shared_ptr<MessageT>&)> func;
   if (reader_func_ != nullptr) {
     func = [this](const std::shared_ptr<MessageT>& msg) {
-      this->Enqueue(msg);
       this->reader_func_(msg);
     };
   } else {
-    func = [this](const std::shared_ptr<MessageT>& msg) { this->Enqueue(msg); };
-  }
-  auto sched = scheduler::Instance();
-  croutine_name_ = role_attr_.node_name() + "_" + role_attr_.channel_name();
-  auto dv = std::make_shared<data::DataVisitor<MessageT>>(
-      role_attr_.channel_id(), pending_queue_size_);
-  // Using factory to wrap templates.
-  croutine::RoutineFactory factory =
-      croutine::CreateRoutineFactory<MessageT>(std::move(func), dv);
-  if (!sched->CreateTask(factory, croutine_name_)) {
-    AERROR << "Create Task Failed!";
-    init_.store(false);
-    return false;
+    func = [this](const std::shared_ptr<MessageT>& msg) { 
+      std::string msg_debug_str = msg->ShortDebugString();
+      AINFO << "Received message: {" << msg_debug_str << "}";
+    };
   }
 
   receiver_ = ReceiverManager<MessageT>::Instance()->GetReceiver(role_attr_);
   this->role_attr_.set_id(receiver_->id().HashValue());
+
+  // join the topology
   channel_manager_ =
       service_discovery::TopologyManager::Instance()->channel_manager();
   JoinTheTopology();
-
   return true;
 }
 
@@ -298,10 +197,6 @@ void Reader<MessageT>::Shutdown() {
   LeaveTheTopology();
   receiver_ = nullptr;
   channel_manager_ = nullptr;
-
-  if (!croutine_name_.empty()) {
-    scheduler::Instance()->RemoveTask(croutine_name_);
-  }
 }
 
 template <typename MessageT>
@@ -347,16 +242,6 @@ void Reader<MessageT>::OnChannelChange(const proto::ChangeMsg& change_msg) {
 }
 
 template <typename MessageT>
-bool Reader<MessageT>::HasReceived() const {
-  return !blocker_->IsPublishedEmpty();
-}
-
-template <typename MessageT>
-bool Reader<MessageT>::Empty() const {
-  return blocker_->IsObservedEmpty();
-}
-
-template <typename MessageT>
 double Reader<MessageT>::GetDelaySec() const {
   if (latest_recv_time_sec_ < 0) {
     return -1.0;
@@ -371,32 +256,6 @@ double Reader<MessageT>::GetDelaySec() const {
 template <typename MessageT>
 uint32_t Reader<MessageT>::PendingQueueSize() const {
   return pending_queue_size_;
-}
-
-template <typename MessageT>
-std::shared_ptr<MessageT> Reader<MessageT>::GetLatestObserved() const {
-  return blocker_->GetLatestObservedPtr();
-}
-
-template <typename MessageT>
-std::shared_ptr<MessageT> Reader<MessageT>::GetOldestObserved() const {
-  return blocker_->GetOldestObservedPtr();
-}
-
-template <typename MessageT>
-void Reader<MessageT>::ClearData() {
-  blocker_->ClearPublished();
-  blocker_->ClearObserved();
-}
-
-template <typename MessageT>
-void Reader<MessageT>::SetHistoryDepth(const uint32_t& depth) {
-  blocker_->set_capacity(depth);
-}
-
-template <typename MessageT>
-uint32_t Reader<MessageT>::GetHistoryDepth() const {
-  return static_cast<uint32_t>(blocker_->capacity());
 }
 
 template <typename MessageT>

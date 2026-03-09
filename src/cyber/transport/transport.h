@@ -24,13 +24,11 @@
 #include "cyber/proto/transport_conf.pb.h"
 
 #include "cyber/common/macros.h"
-#include "cyber/transport/dispatcher/rtps_dispatcher.h"
 #include "cyber/transport/qos/qos_profile_conf.h"
 #include "cyber/transport/receiver/receiver.h"
-#include "cyber/transport/receiver/rtps_receiver.h"
 #include "cyber/transport/rtps/participant.h"
 #include "cyber/transport/transmitter/rtps_transmitter.h"
-
+#include "cyber/transport/receiver/rtps_receiver.h"
 #include "cyber/transport/transmitter/transmitter.h"
 
 namespace apollo {
@@ -63,7 +61,6 @@ class Transport {
 
   std::atomic<bool> is_shutdown_ = {false};
   ParticipantPtr participant_ = nullptr;
-  RtpsDispatcherPtr rtps_dispatcher_ = nullptr;
 
   DECLARE_SINGLETON(Transport)
 };

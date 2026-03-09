@@ -11,6 +11,9 @@ add_subdirectory(proto)
 add_subdirectory(time)
 add_subdirectory(event)
 add_subdirectory(message)
+add_subdirectory(transport)
+add_subdirectory(service_discovery)
+add_subdirectory(node)
 
 
 # =========================

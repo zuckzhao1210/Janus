@@ -9,7 +9,16 @@ set(CMAKE_CXX_STANDARD 14)
 # ==============================
 
 add_library(cyber_transport SHARED
-    
+    transport.cc
+    qos/qos_profile_conf.cc
+    common/identity.cc
+    common/endpoint.cc
+    message/message_info.cc
+    rtps/participant.cc
+    rtps/attributes_filler.cc
+    rtps/sub_listener.cc
+    rtps/underlay_message_type.cc
+    rtps/underlay_message.cc
 )
 
 target_include_directories(cyber_transport

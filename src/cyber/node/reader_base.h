@@ -68,11 +68,6 @@ class ReaderBase {
   virtual void ClearData() = 0;
 
   /**
-   * @brief Get stored data
-   */
-  virtual void Observe() = 0;
-
-  /**
    * @brief Query whether the Reader has data to be handled
    *
    * @return true if data container is empty

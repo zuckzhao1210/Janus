@@ -24,11 +24,6 @@ namespace transport {
 
 Transport::Transport() {
   CreateParticipant();
-  notifier_ = NotifierFactory::CreateNotifier();
-  intra_dispatcher_ = IntraDispatcher::Instance();
-  shm_dispatcher_ = ShmDispatcher::Instance();
-  rtps_dispatcher_ = RtpsDispatcher::Instance();
-  rtps_dispatcher_->set_participant(participant_);
 }
 
 Transport::~Transport() { Shutdown(); }
@@ -37,11 +32,6 @@ void Transport::Shutdown() {
   if (is_shutdown_.exchange(true)) {
     return;
   }
-
-  intra_dispatcher_->Shutdown();
-  shm_dispatcher_->Shutdown();
-  rtps_dispatcher_->Shutdown();
-  notifier_->Shutdown();
 
   if (participant_ != nullptr) {
     participant_->Shutdown();

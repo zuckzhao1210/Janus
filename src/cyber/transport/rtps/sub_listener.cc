@@ -37,7 +37,7 @@ void SubListener::onNewDataMessage(eprosima::fastrtps::Subscriber* sub) {
   auto channel_id = common::Hash(sub->getAttributes().topic.getTopicName());
   eprosima::fastrtps::SampleInfo_t m_info;
   UnderlayMessage m;
-UnderlayMessage
+
   RETURN_IF(!sub->takeNextData(reinterpret_cast<void*>(&m), &m_info));
   RETURN_IF(m_info.sampleKind != eprosima::fastrtps::ALIVE);
 

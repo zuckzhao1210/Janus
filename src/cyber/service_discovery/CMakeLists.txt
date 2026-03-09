@@ -31,13 +31,9 @@ target_link_libraries(cyber_service_discovery
 PUBLIC
     cyber_transport
     cyber_common
-    # cyber_binary
-    role_attributes_cc_proto
     fastrtps
     cyber_state
     cyber_message
-    proto_desc_cc_proto
-    topology_change_cc_proto
     cyber_time
 )
 

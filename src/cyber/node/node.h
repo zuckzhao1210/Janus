@@ -125,15 +125,6 @@ class Node {
   bool DeleteReader(const std::string& channel_name);
   bool DeleteReader(const ReaderConfig& config);
   bool DeleteReader(const proto::RoleAttributes& role_attr);
-  /**
-   * @brief Observe all readers' data
-   */
-  void Observe();
-
-  /**
-   * @brief clear all readers' data
-   */
-  void ClearData();
 
   /**
    * @brief Get the Reader object that subscribe `channel_name`

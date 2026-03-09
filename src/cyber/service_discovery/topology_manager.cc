@@ -76,7 +76,7 @@ bool TopologyManager::Init() {
   CreateParticipant();
 
   bool result =
-      InitNodeManager() && InitChannelManager() && InitServiceManager();
+      InitNodeManager() && InitChannelManager();
   if (!result) {
     AERROR << "init manager failed.";
     participant_ = nullptr;
