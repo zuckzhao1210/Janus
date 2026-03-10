@@ -63,27 +63,6 @@ class ReaderBase {
   virtual void Shutdown() = 0;
 
   /**
-   * @brief Clear local data
-   */
-  virtual void ClearData() = 0;
-
-  /**
-   * @brief Query whether the Reader has data to be handled
-   *
-   * @return true if data container is empty
-   * @return false if data container has data
-   */
-  virtual bool Empty() const = 0;
-
-  /**
-   * @brief Query whether we have received data since last clear
-   *
-   * @return true if the reader has received data
-   * @return false if the reader has not received data
-   */
-  virtual bool HasReceived() const = 0;
-
-  /**
    * @brief Get time interval of since last receive message
    *
    * @return double seconds delay
@@ -170,7 +149,9 @@ class ReceiverManager {
    * @param role_attr the attribute that the Receiver has
    * @return std::shared_ptr<transport::Receiver<MessageT>> result Receiver
    */
-  auto GetReceiver(const proto::RoleAttributes& role_attr) ->
+  auto GetReceiver(
+      const proto::RoleAttributes& role_attr,
+      const std::function<void(const std::shared_ptr<MessageT>&)>& callback) ->
       typename std::shared_ptr<transport::Receiver<MessageT>>;
 
  private:
@@ -192,7 +173,8 @@ ReceiverManager<MessageT>::ReceiverManager() {}
 
 template <typename MessageT>
 auto ReceiverManager<MessageT>::GetReceiver(
-    const proto::RoleAttributes& role_attr) ->
+    const proto::RoleAttributes& role_attr,
+    const std::function<void(const std::shared_ptr<MessageT>&)>& callback) ->
     typename std::shared_ptr<transport::Receiver<MessageT>> {
   std::lock_guard<std::mutex> lock(receiver_map_mutex_);
   // because multi reader for one channel will write datacache multi times,
@@ -201,7 +183,7 @@ auto ReceiverManager<MessageT>::GetReceiver(
   if (receiver_map_.count(channel_name) == 0) {
     receiver_map_[channel_name] =
         transport::Transport::Instance()->CreateReceiver<MessageT>(
-            role_attr, [](const std::shared_ptr<MessageT>& msg,
+            role_attr, [callback](const std::shared_ptr<MessageT>& msg,
                           const transport::MessageInfo& msg_info,
                           const proto::RoleAttributes& reader_attr) {
               (void)msg_info;
@@ -209,8 +191,7 @@ auto ReceiverManager<MessageT>::GetReceiver(
               PerfEventCache::Instance()->AddTransportEvent(
                   TransPerf::DISPATCH, reader_attr.channel_id(),
                   msg_info.seq_num());
-              data::DataDispatcher<MessageT>::Instance()->Dispatch(
-                  reader_attr.channel_id(), msg);
+              callback(msg);
               PerfEventCache::Instance()->AddTransportEvent(
                   TransPerf::NOTIFY, reader_attr.channel_id(),
                   msg_info.seq_num());

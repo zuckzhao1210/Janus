@@ -31,7 +31,7 @@ target_link_libraries(cyber_service_discovery
 PUBLIC
     cyber_transport
     cyber_common
-    fastrtps
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libfastrtps.so
     cyber_state
     cyber_message
     cyber_time

@@ -2,7 +2,7 @@
 #define JANUS_H
 
 #include "apollo_cyber.h"
-#include "common/logger.h"
+// #include "common/logger.h"
 #include "ros2_node.h"
 
 using ApolloCyberPtr = janus::ApolloCyber*;

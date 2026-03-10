@@ -80,6 +80,7 @@ void NodeManager::OnTopoModuleLeave(const std::string& host_name,
 
 void NodeManager::DisposeJoin(const ChangeMsg& msg) {
   auto node = std::make_shared<RoleNode>(msg.role_attr(), msg.timestamp());
+
   uint64_t key = node->attributes().node_id();
   // duplicated node
   if (!nodes_.Add(key, node, false)) {

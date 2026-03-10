@@ -60,6 +60,7 @@ Receiver<M>::~Receiver() {}
 template <typename M>
 void Receiver<M>::OnNewMessage(const MessagePtr& msg,
                                const MessageInfo& msg_info) {
+  AWARN << "OnNewMessage: " << std::endl;
   if (msg_listener_ != nullptr) {
     msg_listener_(msg, msg_info, attr_);
   }

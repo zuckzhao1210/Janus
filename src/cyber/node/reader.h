@@ -173,13 +173,14 @@ bool Reader<MessageT>::Init() {
       this->reader_func_(msg);
     };
   } else {
+    // If user has not set callback function, we will print the message to log.
     func = [this](const std::shared_ptr<MessageT>& msg) { 
       std::string msg_debug_str = msg->ShortDebugString();
       AINFO << "Received message: {" << msg_debug_str << "}";
     };
   }
 
-  receiver_ = ReceiverManager<MessageT>::Instance()->GetReceiver(role_attr_);
+  receiver_ = ReceiverManager<MessageT>::Instance()->GetReceiver(role_attr_, func);
   this->role_attr_.set_id(receiver_->id().HashValue());
 
   // join the topology

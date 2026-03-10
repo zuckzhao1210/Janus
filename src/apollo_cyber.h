@@ -10,6 +10,7 @@
 #include "cyber/transport/transport.h"
 #include "cyber/node/node_channel_impl.h"
 #include "cyber/node/node.h"
+#include "cyber/state.h"
 
 using apollo::cyber::proto::RoleAttributes;
 using namespace apollo::cyber;
@@ -18,11 +19,6 @@ namespace apollo {
 namespace cyber {
 std::unique_ptr<Node> CreateNode(const std::string& node_name,
                                  const std::string& name_space = "");
-
-std::unique_ptr<Node> CreateNode(const std::string& node_name,
-                                 const std::string& name_space) {
-  return std::unique_ptr<Node>(new Node(node_name, name_space));
-}
 }  // namespace cyber
 }  // namespace apollo
 
@@ -42,6 +38,7 @@ class ApolloCyber {
  private:
   ApolloCyber(const std::string& node_name) : node_name_(node_name) {
     node_ptr_ = apollo::cyber::CreateNode(node_name_);
+    SetState(STATE_INITIALIZED);
   };
 
  private:

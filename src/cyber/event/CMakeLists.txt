@@ -28,4 +28,5 @@ target_link_libraries(cyber_event
     PUBLIC
         cyber_common
         cyber_time
+        cyber_state
 )

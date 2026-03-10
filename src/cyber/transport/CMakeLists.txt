@@ -14,6 +14,8 @@ add_library(cyber_transport SHARED
     common/identity.cc
     common/endpoint.cc
     message/message_info.cc
+    dispatcher/dispatcher.cc
+    dispatcher/rtps_dispatcher.cc
     rtps/participant.cc
     rtps/attributes_filler.cc
     rtps/sub_listener.cc
@@ -34,5 +36,7 @@ PUBLIC
     cyber_proto
     cyber_message
     cyber_event
-    fastrtps
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libfastrtps.so.1
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libfastcdr.so
+    uuid
 )

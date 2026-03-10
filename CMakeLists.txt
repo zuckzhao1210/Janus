@@ -5,6 +5,11 @@ project(janus)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 编译方式
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE debug)
+endif()
+
 add_subdirectory(src/modules)
 add_subdirectory(src/cyber)
 
@@ -45,3 +50,18 @@ endif()
 #     apollo_proto
 #     # ${CMAKE_SOURCE_DIR}/thirdparty/lib/libtinyxml2.so
 # )
+
+# 测试
+add_executable(janus_test src/main.cpp src/Janus.cpp src/apollo_cyber.cpp)
+link_directories(${CMAKE_SOURCE_DIR}/thirdparty/lib)
+target_link_libraries(janus_test
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libfastrtps.so.1
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libfastcdr.so
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libprotobuf.so
+    ${CMAKE_SOURCE_DIR}/thirdparty/lib/libglog.so
+    pthread
+    apollo_proto
+    cyber_node
+    cyber_state
+    # ${CMAKE_SOURCE_DIR}/thirdparty/lib/libtinyxml2.so
+)

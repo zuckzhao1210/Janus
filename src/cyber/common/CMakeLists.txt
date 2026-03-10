@@ -33,6 +33,6 @@ target_include_directories(cyber_common
 target_link_libraries(cyber_common
     PUBLIC
         cyber_binary
-        protobuf
+        ${CMAKE_SOURCE_DIR}/thirdparty/lib/libprotobuf.so
         glog
 )
